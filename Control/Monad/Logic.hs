@@ -159,6 +159,9 @@ instance (Monad m) => MonadLogic (LogicT m) where
      where
      ssk a fk = return $ Just (a, (lift fk >>= reflect))
     once m = LogicT $ \sk fk -> unLogicT m (\a _ -> sk a fk) fk
+    ifte m f mfail = LogicT $ \sk fk ->
+      unLogicT m (\a _ -> unLogicT (f a) sk fk)
+                 (unLogicT mfail sk fk)
 
 instance (Monad m, F.Foldable m) => F.Foldable (LogicT m) where
     foldMap f m = F.fold $ unLogicT m (liftM . mappend . f) (return mempty)
