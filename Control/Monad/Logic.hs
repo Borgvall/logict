@@ -37,6 +37,8 @@ module Control.Monad.Logic (
     observeT,
     observeManyT,
     observeAllT,
+    -- ** Special constructors for logic computations
+    member,
     module Control.Monad,
     module Control.Monad.Trans
   ) where
@@ -107,6 +109,14 @@ observeManyT n m
 -- failure continuations.
 runLogicT :: LogicT m a -> (a -> m r -> m r) -> m r -> m r
 runLogicT = unLogicT
+
+-------------------------------------------------------------------------
+-- | Succeed for all members.
+--
+-- Create the logic computation that succeeds for all members in the
+-- supplied 'Foldable' structure.
+member :: Foldable t => t a -> LogicT m a
+member xs = LogicT $ \sk fk -> F.foldr sk fk xs
 
 -------------------------------------------------------------------------
 -- | The basic Logic monad, for performing backtracking computations
