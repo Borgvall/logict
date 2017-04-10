@@ -39,6 +39,7 @@ module Control.Monad.Logic (
     observeAllT,
     -- ** Special constructors for logic computations
     member,
+    iterates,
     module Control.Monad,
     module Control.Monad.Trans
   ) where
@@ -117,6 +118,15 @@ runLogicT = unLogicT
 -- supplied 'Foldable' structure.
 member :: Foldable t => t a -> LogicT m a
 member xs = LogicT $ \sk fk -> F.foldr sk fk xs
+
+-------------------------------------------------------------------------
+-- | All results of the function applied an arbitrary number of times to
+-- the start value.
+--
+-- > iterates f x = pure x <|> pure (f x) <|> pure (f (f x)) <|> ...
+iterates :: (a -> a) -> a -> LogicT m a
+iterates f x0 = LogicT $
+  \sk _ -> let iter x = sk x (iter (f x)) in iter x0
 
 -------------------------------------------------------------------------
 -- | The basic Logic monad, for performing backtracking computations
