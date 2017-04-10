@@ -25,6 +25,7 @@ module Control.Monad.Logic (
     Logic,
     logic,
     runLogic,
+    liftLogic,
     check,
     observe,
     observeMany,
@@ -160,6 +161,11 @@ runLogic l s f = runIdentity $ unLogicT l si fi
  where
  si = fmap . s
  fi = Identity f
+
+-------------------------------------------------------------------------
+-- | Lift a pure logic computation in any context.
+liftLogic :: Logic a -> LogicT m a
+liftLogic l = LogicT $ runLogic l
 
 instance Functor (LogicT f) where
     fmap f lt = LogicT $ \sk fk -> unLogicT lt (sk . f) fk
