@@ -25,12 +25,14 @@ module Control.Monad.Logic (
     Logic,
     logic,
     runLogic,
+    check,
     observe,
     observeMany,
     observeAll,
     -- * The LogicT monad transformer
     LogicT(..),
     runLogicT,
+    checkT,
     observeT,
     observeManyT,
     observeAllT,
@@ -59,6 +61,23 @@ import Control.Monad.Logic.Class
 -- layered over another monad 'm'
 newtype LogicT m a =
     LogicT { unLogicT :: forall r. (a -> m r -> m r) -> m r -> m r }
+
+-------------------------------------------------------------------------
+-- | Check if a solution exist.
+--
+-- Returns 'True', on the first success. Returns 'False', when the predicate
+-- fails.
+--
+-- Properties:
+--
+-- > checkT mzero = return False
+-- > checkT (return _ `mplus` _) = return True
+--
+-- One can think about it as an inverse of 'guard':
+--
+-- > checkT . guard = return
+checkT :: Monad m => LogicT m a -> m Bool
+checkT m = unLogicT m (\_ _ -> return True) (return False)
 
 -------------------------------------------------------------------------
 -- | Extracts the first result from a LogicT computation,
@@ -99,6 +118,22 @@ logic :: (forall r. (a -> r -> r) -> r -> r) -> Logic a
 logic f = LogicT $ \k -> Identity .
                          f (\a -> runIdentity . k a . Identity) .
                          runIdentity
+
+-------------------------------------------------------------------------
+-- | Check if a solution exist.
+--
+-- 'True', on the first success. 'False', when the predicate fails.
+--
+-- Properties:
+--
+-- > check mzero = False
+-- > check (return _ `mplus` _) = True
+--
+-- One can think about it as an inverse of 'guard':
+--
+-- > check . guard = id
+check :: Logic a -> Bool
+check = runIdentity . checkT
 
 -------------------------------------------------------------------------
 -- | Extracts the first result from a Logic computation.
