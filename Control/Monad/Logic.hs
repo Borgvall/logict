@@ -40,6 +40,7 @@ module Control.Monad.Logic (
     -- ** Special constructors for logic computations
     member,
     iterates,
+    iterates2,
     module Control.Monad,
     module Control.Monad.Trans
   ) where
@@ -127,6 +128,21 @@ member xs = LogicT $ \sk fk -> F.foldr sk fk xs
 iterates :: (a -> a) -> a -> LogicT m a
 iterates f x0 = LogicT $
   \sk _ -> let iter x = sk x (iter (f x)) in iter x0
+
+-------------------------------------------------------------------------
+-- | The two starting values, followed the function applied to the two
+-- previous values.
+--
+-- > iterates2 f x y =
+-- >	pure x <|> pure y
+-- >	  <|> pure (f x y) <|> pure (f y (f x y)) <|> ...
+--
+-- For instance the fibonacci numbers can be described as:
+--
+-- > fibonacci = iterates2 (+) 1 1
+iterates2 :: (a -> a -> a) -> a -> a -> LogicT m a
+iterates2 f x0 x1 = LogicT $
+  \sk _ -> let iter2 x y = sk x (iter2 y (f x y)) in iter2 x0 x1
 
 -------------------------------------------------------------------------
 -- | The basic Logic monad, for performing backtracking computations
